@@ -1,0 +1,65 @@
+#include <iostream>
+#include <vector>
+
+class Command {
+public:
+	virtual ~Command() {};
+	virtual void execute() = 0;
+};
+
+class Canvas {
+	std::vector<std::string> shapes;
+public:
+	void addShape(const std::string & newShape) {
+		std::cout << "add shape " << newShape.c_str() << std::endl;
+		shapes.push_back(newShape);
+	};
+	void clearAll() {
+		std::cout << "Clear canvas\n";
+		shapes.clear();
+	};
+	std::vector<std::string> getShapes() { return shapes; };
+};
+
+class Button {
+private:
+	Command *_command;
+public:
+	Button(Command* command):_command(command){}
+    ~Button() { delete _command; };
+	void click() { _command->execute(); }
+};
+
+class AddShapeCommand : public Command {
+	std::string shapeName;
+	Canvas *canvas;
+public:
+	AddShapeCommand(const std::string & shapeName, Canvas* canvas) : shapeName(shapeName), canvas(canvas) {};
+	void execute() {
+		canvas->addShape(shapeName);
+	}
+};
+
+class ClearCommand : public Command {
+	Canvas *canvas;
+public:
+	ClearCommand(Canvas *canvas) : canvas(canvas) {};
+	void execute() {
+		canvas->clearAll();
+	}
+};
+
+
+int main(int argc, const char * argv[]) {
+	Canvas* canvas = new Canvas;
+	Button* addShapeButton = new Button(new AddShapeCommand("circle", canvas));
+	Button* clearButton = new Button(new ClearCommand(canvas));
+	addShapeButton->click();
+	clearButton->click();
+	addShapeButton->click();
+	
+	delete addShapeButton;
+	delete clearButton;
+	delete canvas;
+	return 0;
+}
