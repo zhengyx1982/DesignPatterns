@@ -1,0 +1,70 @@
+#include <iostream>
+class IHandler
+{
+public:
+	virtual IHandler* SetNext(IHandler* next) = 0;
+	virtual ~IHandler() {};
+	virtual void Action() = 0;
+};
+
+class BaseHandler:public IHandler
+{
+protected:
+	IHandler * _next;
+public:
+	IHandler* SetNext(IHandler* next) override {
+		_next = next;
+		return _next;
+	}
+
+	virtual void Action() override {
+		if (_next) {
+			return _next->Action();
+		}
+	}
+
+	~BaseHandler() { delete _next; }
+};
+
+class AddOilHandler :public BaseHandler
+{
+public:
+	virtual void Action() override {
+		std::cout << "Add Oil!\n";
+		BaseHandler::Action();
+	}
+};
+class AddSugerHandler :public BaseHandler
+{
+	virtual void Action() override {
+		std::cout << "Add Suger!\n";
+		BaseHandler::Action();
+	}
+};
+class AddWaterHandler :public BaseHandler
+{
+	virtual void Action() override {
+		std::cout << "Add Water!\n";
+		BaseHandler::Action();
+	}
+};
+int main()
+{
+	std::cout << "first cooker is cooking...\n";
+	BaseHandler* cookHandler = new BaseHandler;
+	cookHandler
+		->SetNext(new AddWaterHandler)
+		->SetNext(new AddOilHandler)
+		->SetNext(new AddSugerHandler);
+	cookHandler->Action();
+	delete cookHandler;
+
+	std::cout << "second cooker is cooking...\n";
+	cookHandler = new BaseHandler;
+	cookHandler
+		->SetNext(new AddSugerHandler)
+		->SetNext(new AddWaterHandler)
+		->SetNext(new AddOilHandler);
+	cookHandler->Action();
+	delete cookHandler;
+}
