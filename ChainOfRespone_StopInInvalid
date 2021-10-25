@@ -1,0 +1,83 @@
+#include <iostream>
+class IHandler
+{
+public:
+	virtual IHandler* SetNext(IHandler* next) = 0;
+	virtual ~IHandler() {};
+	virtual bool Action(int number) = 0;
+};
+
+class BaseHandler:public IHandler
+{
+protected:
+	IHandler * _next;
+public:
+	IHandler* SetNext(IHandler* next) override {
+		_next = next;
+		return _next;
+	}
+
+	virtual bool Action(int number) override {
+		if (_next) {
+			return _next->Action(number);
+		}
+		std::cout << "It is good!\n";
+	}
+
+	~BaseHandler() { delete _next; }
+};
+
+class PositiveHandler :public BaseHandler
+{
+public:
+	virtual bool Action(int number) override {
+		if (number < 0) {
+			std::cout << "It is nagitive\n";
+			return false;
+		}
+		return BaseHandler::Action(number);
+	}
+};
+class EvenHandler :public BaseHandler
+{
+public:
+	virtual bool Action(int number) override {
+		if (number %2 != 0) {
+			std::cout << "It is odd\n";
+			return false;
+		}
+		return BaseHandler::Action(number);
+	}
+};
+class MaxHandler :public BaseHandler
+{
+public:
+	virtual bool Action(int number) override {
+		if (number > 100) {
+			std::cout << "It is bigger than 100\n";
+			return false;
+		}
+		return BaseHandler::Action(number);
+	}
+};
+int main()
+{
+	BaseHandler* numHander = new BaseHandler();
+	numHander
+		->SetNext(new PositiveHandler)
+		->SetNext(new MaxHandler)
+		->SetNext(new EvenHandler);
+
+	std::cout << "validate number -9\n";
+	numHander->Action(-9);
+
+	std::cout << "validate number 21\n";
+	numHander->Action(21);
+
+	std::cout << "validate number 102\n";
+	numHander->Action(102);
+
+	std::cout << "validate number 64\n";
+	numHander->Action(64);
+	delete numHander;
+}
