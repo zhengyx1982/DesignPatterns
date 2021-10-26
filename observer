@@ -81,6 +81,7 @@ int main(int argc, const char * argv[]) {
 	backgroundPublisher->Publish("Report generatation 50%");
 	backgroundPublisher->Publish("Report generatation is completed");
 
+        windowsMessgePublisher->DetachSubscriber(htmlListener);
 	windowsMessgePublisher->Publish("Show the report");
 
 	delete windowsMessgePublisher;
