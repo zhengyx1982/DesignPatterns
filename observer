@@ -1,0 +1,92 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+class ISubscriber {
+public:
+	virtual void Receive(const std::string & publisherName, const std::string & message) = 0;
+	virtual std::string GetName() = 0;
+};
+
+class IPublisher {
+public:
+	virtual void AttachSubscriber(ISubscriber *subscriber) = 0;
+	virtual void DetachSubscriber(ISubscriber *subscriber) = 0;
+	virtual void Publish(const std::string & message) = 0;
+};
+
+class Publisher : public IPublisher {
+	std::string _publisherName;
+	std::vector<ISubscriber*> _subscribers;
+public:
+	Publisher(const std::string & name) : _publisherName(name) {};
+	void AttachSubscriber(ISubscriber *subscriber) override {
+		_subscribers.push_back(subscriber);
+	};
+	void DetachSubscriber(ISubscriber *subscriber) override {
+		_subscribers.erase(std::remove_if(_subscribers.begin(), _subscribers.end(), [subscriber](ISubscriber *s) { return s->GetName() == subscriber->GetName(); }), _subscribers.end());
+	};
+	void Publish(const std::string & message) override {
+		for (auto subscriber : _subscribers) {
+			subscriber->Receive(_publisherName, message);
+		}
+	};
+};
+
+class BaseSubscriber : public ISubscriber
+{
+	std::string _subscriberName;
+public:
+	BaseSubscriber(const std::string& name) : _subscriberName(name) {};
+	std::string GetName() override {
+		return _subscriberName;
+	 }
+};
+
+class TextListener :public BaseSubscriber
+{
+public:
+	TextListener(const std::string& name):BaseSubscriber(name){}
+	void Receive(const std::string & publisherName, const std::string & message) override {
+		std::cout << "Text listener received message from publisher " << publisherName.c_str() << std::endl;
+		std::cout << message.c_str() << std::endl;
+	}
+};
+class HtmlListener : public BaseSubscriber
+{
+public:
+	HtmlListener(const std::string& name) :BaseSubscriber(name) {}
+	void Receive(const std::string & publisherName, const std::string & message) override {
+		std::cout << "HTML listener received message from publisher " << publisherName.c_str() << std::endl;
+		std::cout << "<msg>"<<message.c_str() <<"</msg>" <<std::endl;
+	}
+};
+
+
+int main(int argc, const char * argv[]) {
+	Publisher* windowsMessgePublisher = new Publisher("Windows");
+	Publisher* backgroundPublisher = new Publisher("Background worker");
+
+	TextListener* textListener = new TextListener("Text");
+	HtmlListener* htmlListener = new HtmlListener("HTML");
+
+	windowsMessgePublisher->AttachSubscriber(textListener);
+	windowsMessgePublisher->AttachSubscriber(htmlListener);
+
+	backgroundPublisher->AttachSubscriber(textListener);
+
+	windowsMessgePublisher->Publish("User click Generate Report button");
+
+	backgroundPublisher->Publish("Report generatation is started");
+	backgroundPublisher->Publish("Report generatation 50%");
+	backgroundPublisher->Publish("Report generatation is completed");
+
+	windowsMessgePublisher->Publish("Show the report");
+
+	delete windowsMessgePublisher;
+	delete backgroundPublisher;
+	delete textListener;
+	delete htmlListener;
+
+	return 0;
+}
