@@ -1,0 +1,75 @@
+#include "main.h"
+#include<vector>
+#include<iostream>
+#include<string>
+using namespace std;
+
+class Canvas;
+
+class CanvasMemento
+{
+	friend class Canvas;
+	const vector<string> _shapes;
+public:
+	CanvasMemento(const vector<string>& shapes) : _shapes(shapes) {};
+
+};
+
+
+class Canvas {
+	vector<string> _shapes;
+	vector<CanvasMemento*> _oldStates;
+
+public:
+	void addShapes(const string& newShape) {
+		_oldStates.push_back(new CanvasMemento(_shapes));
+		_shapes.push_back(newShape);
+	}
+
+	void undo() {
+		CanvasMemento *previousState = _oldStates.back();
+		_oldStates.pop_back();
+		_shapes = previousState->_shapes;
+		delete previousState;
+	}
+
+	void clearAll() {
+		_oldStates.push_back(new CanvasMemento(_shapes));
+		_shapes.clear();
+	}
+	~Canvas() {
+		for (auto p : _oldStates){
+			delete p;
+		}
+		_oldStates.clear();
+	}
+
+	vector<string> getShapes() { return _shapes; }
+};
+int main(int argc, const char * argv[]) {
+
+	Canvas *canvas = new Canvas;
+	canvas->addShapes("Circle");
+	canvas->addShapes("Triangle");
+
+	for (auto shape : canvas->getShapes()) {
+		cout << shape << ",";
+	}
+	cout << endl;
+	canvas->undo();
+
+	for (auto shape : canvas->getShapes()) {
+		cout << shape << ",";
+	}
+	cout << endl;
+
+	canvas->clearAll();
+
+	canvas->addShapes("square");
+	for (auto shape : canvas->getShapes()) {
+		cout << shape << ",";
+	}
+	cout << endl;
+
+	return 0;
+}
